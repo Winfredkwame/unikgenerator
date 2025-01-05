@@ -1,0 +1,187 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unique Number Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #eef2f3;
+        }
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 500px;
+            margin: 20px;
+        }
+        h1, h2, h3 {
+            color: #333;
+        }
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            border: none;
+            background-color: #007bff;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+        li {
+            margin: 5px 0;
+        }
+        .generated {
+            color: green;
+        }
+        .not-generated {
+            color: red;
+        }
+        #numberGeneratorSection {
+            display: none;
+        }
+        #reshuffleButton, #copyButton, #shareButton {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div id="passwordSection">
+        <h1>Enter Password to Access the Generator</h1>
+        <input type="password" id="passwordInput" placeholder="Enter password">
+        <button onclick="checkPassword()">Submit</button>
+    </div>
+
+    <div id="numberGeneratorSection" class="container">
+        <h1>Unique Number Generator</h1>
+        <input type="text" id="personName" placeholder="Enter Your Name">
+        <button onclick="generateNumber()">Generate My Number</button>
+        <button id="reshuffleButton" onclick="reshuffleNumbers()">Reshuffle Numbers</button>
+        <div id="categorizedResults" style="margin-top: 20px; text-align: left;">
+            <h2>Status of Users</h2>
+            <div>
+                <h3>Generated Numbers</h3>
+                <ul id="generatedUsersList"></ul>
+            </div>
+            <div>
+                <h3>Yet to Generate</h3>
+                <ul id="notGeneratedUsersList"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const correctPassword = "2025"; // Correct password to unlock the generator
+        const localStorageKey = "generatedNumbers"; // LocalStorage key
+
+        window.onload = function () {
+            const savedData = JSON.parse(localStorage.getItem(localStorageKey)) || {};
+            displayStatus(savedData);
+        };
+
+        function checkPassword() {
+            const passwordInput = document.getElementById("passwordInput").value;
+            if (passwordInput === correctPassword) {
+                document.getElementById("passwordSection").style.display = "none";
+                document.getElementById("numberGeneratorSection").style.display = "block";
+            } else {
+                alert("Incorrect password. Please try again.");
+            }
+        }
+
+        function generateNumber() {
+            const nameInput = document.getElementById("personName");
+            const name = nameInput.value.trim();
+
+            if (!name) {
+                alert("Please enter your name.");
+                return;
+            }
+
+            const savedData = JSON.parse(localStorage.getItem(localStorageKey)) || {};
+
+            if (savedData[name]) {
+                alert(`${name}, you have already generated a number: ${savedData[name]}`);
+                return;
+            }
+
+            const assignedNumbers = new Set(Object.values(savedData));
+            if (assignedNumbers.size === 5) {
+                alert("All numbers have been assigned!");
+                return;
+            }
+
+            let uniqueNumber;
+            do {
+                uniqueNumber = Math.floor(Math.random() * 5) + 1;
+            } while (assignedNumbers.has(uniqueNumber));
+
+            savedData[name] = uniqueNumber;
+            localStorage.setItem(localStorageKey, JSON.stringify(savedData));
+            displayStatus(savedData);
+
+            nameInput.value = "";
+        }
+
+        function reshuffleNumbers() {
+            const confirmed = confirm("Are you sure you want to reshuffle all numbers?");
+            if (confirmed) {
+                localStorage.removeItem(localStorageKey);
+                displayStatus({});
+            }
+        }
+
+        function displayStatus(savedData) {
+            const generatedList = document.getElementById("generatedUsersList");
+            const notGeneratedList = document.getElementById("notGeneratedUsersList");
+
+            generatedList.innerHTML = "";
+            notGeneratedList.innerHTML = "";
+
+            Object.keys(savedData).forEach(name => {
+                const listItem = document.createElement("li");
+                listItem.textContent = `${name}: ${savedData[name]}`;
+                listItem.classList.add("generated");
+                generatedList.appendChild(listItem);
+            });
+
+            const totalUsers = 5;
+            const remainingUsers = totalUsers - Object.keys(savedData).length;
+
+            for (let i = 1; i <= remainingUsers; i++) {
+                const listItem = document.createElement("li");
+                listItem.textContent = `User ${i + Object.keys(savedData).length}: Not Generated`;
+                listItem.classList.add("not-generated");
+                notGeneratedList.appendChild(listItem);
+            }
+        }
+    </script>
+</body>
+</html>
+
